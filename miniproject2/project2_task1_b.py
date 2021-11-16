@@ -54,7 +54,7 @@ def main():
     except FileNotFoundError:
         print("File at the specified path was not found")
     except IsADirectoryError:
-        print("Please specify path to file, not a directory")
+        print("Please specify path to the file, not a directory")
     except PermissionError:
         print("Insufficient permissions to access file")
     except UnicodeDecodeError:

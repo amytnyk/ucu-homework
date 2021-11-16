@@ -28,7 +28,7 @@ def copy_tree(src: str, dst: str):
     Copy files from src to dst
     """
     for subdir, dirs, files in os.walk(src):
-        os.mkdir(get_dest_path(src, dst, subdir))
+        os.makedirs(get_dest_path(src, dst, subdir), exist_ok=True)
         for file in files:
             src_path = os.path.join(subdir, file)
             dest_path = get_dest_path(src, dst, src_path)
@@ -38,6 +38,7 @@ def copy_tree(src: str, dst: str):
 def main():
     """
     Main function for copying files
+    usage: python project2_task2_d.py src dst
     """
     parser = argparse.ArgumentParser(description='Copy files')
     parser.add_argument('src', type=str, help='path to source')
@@ -46,8 +47,6 @@ def main():
 
     if not os.path.isdir(args.src):
         print("Directory was not found at the specified src path")
-    elif os.path.exists(args.dst):
-        print("Destination directory already exists")
     else:
         try:
             copy_tree(args.src, args.dst)
@@ -56,7 +55,4 @@ def main():
 
 
 if __name__ == "__main__":
-    import doctest
-
-    doctest.testmod()
     main()

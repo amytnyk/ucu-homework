@@ -22,15 +22,17 @@ def archive(src: str, dst: str):
     """
     Zip src and save to dst
     """
+    src_dir = os.path.dirname(src) if os.path.isfile(src) else src
     with ZipFile(dst, 'w') as zipfile:
         for file in all_files(src):
             if os.path.abspath(file) != os.path.abspath(dst):
-                zipfile.write(file, os.path.relpath(file, src))
+                zipfile.write(file, os.path.relpath(file, src_dir))
 
 
 def main():
     """
     Main function for archiving
+    usage: python project2_task3_c.py src dst
     """
     parser = argparse.ArgumentParser(description='Archiver')
     parser.add_argument('src', type=str, help='path to source')
@@ -39,7 +41,7 @@ def main():
 
     try:
         if os.path.exists(args.src):
-            archive(args.src, args.writedst)
+            archive(args.src, args.dst)
         else:
             print("Cannot find any file or directory in specified source path")
     except PermissionError:
@@ -49,7 +51,4 @@ def main():
 
 
 if __name__ == "__main__":
-    import doctest
-
-    doctest.testmod()
     main()

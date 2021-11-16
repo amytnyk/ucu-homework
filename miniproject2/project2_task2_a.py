@@ -1,9 +1,8 @@
 """
-Module for printing directory contents as tree
+Module that produces a depth-indented listing of files
 """
 import argparse
 import os
-import posix
 
 
 def get_display_name(path: str) -> str:
@@ -51,12 +50,12 @@ def print_styled(path: str):
     """
     display_name = get_display_name(path)
     color = ''
-    bold = '1'
+    bold = '1'  # True
     if os.path.isdir(path):
-        color = '34'
+        color = '34'  # Blue
     elif os.path.islink(path):
         display_name += " -> " + os.readlink(path)
-        color = '32'
+        color = '32'  # Green
     else:
         bold = '0'
     print(f"\033[{bold};{color}m{display_name}\033[0m")
@@ -65,41 +64,35 @@ def print_styled(path: str):
 def print_tree(path: str, prefix: str = "") -> (int, int):
     """
     Prints directory contents as a tree
+    Returns tuple of directories count and files count inside directory
     """
     directories_count = 0
     files_count = 0
+
     print_styled(path)
+
     if os.path.isdir(path):
         directories_count = 1
-        entries = sorted(os.listdir(path), key=lambda x: x)
-        for idx, entry in enumerate(entries):
-            will_be_last = idx == len(entries) - 1
-            new_prefix = get_new_prefix(prefix, will_be_last)
-            print(get_entry_header(prefix, will_be_last), end='')
-            dirs, files = print_tree(os.path.join(path, entry), new_prefix)
-            directories_count += dirs
-            files_count += files
+        try:
+            entries = sorted(os.listdir(path), key=lambda x: x)
+            for idx, entry in enumerate(entries):
+                will_be_last = idx == len(entries) - 1
+                new_prefix = get_new_prefix(prefix, will_be_last)
+                print(get_entry_header(prefix, will_be_last), end='')
+                dirs, files = print_tree(os.path.join(path, entry), new_prefix)
+                directories_count += dirs
+                files_count += files
+        except PermissionError:
+            pass  # Insufficient permissions to list this directory
     else:
         files_count = 1
     return directories_count, files_count
 
 
-def tree(path) -> list[str]:
-    lst = [entryname_of(path)]
-    if isdir(path):
-        for entry in dir(path):
-            sublist = tree(entry)
-            sublist[0] = ('└── ' if is_last_entry_in_dir else '├── ') + sublist[0]
-            for i in range(1, len(sublist)):
-                sublist[i] = ('    ' if is_last_entry_in_dir else '|   ') + sublist[i]
-            lst.extend(sublist)
-    return lst
-
-print('\n'.join(tree('some/path')))
-
 def main():
     """
     Main function
+    Usage: python project2_task2_a.py path
     """
     parser = argparse.ArgumentParser(
         description='Prints directory contents as a tree')
@@ -110,8 +103,6 @@ def main():
         try:
             directories_count, files_count = print_tree(args.path)
             print(f"{directories_count - 1} directories, {files_count} files")
-        except PermissionError:
-            print("Permission denied. Please run with sudo.")
         except FileNotFoundError:
             print("\nCannot found some file, maybe lack of permissions.")
     else:
@@ -119,7 +110,4 @@ def main():
 
 
 if __name__ == "__main__":
-    import doctest
-
-    doctest.testmod()
     main()

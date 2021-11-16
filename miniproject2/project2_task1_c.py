@@ -1,7 +1,7 @@
 """
 Module for caesar encryption/decryption
 >>> a = "LoReM IpSum Та ШоСЬ таМ!!!!"
->>> offset = 777
+>>> offset = 777 # can be any integer
 >>> decrypt(encrypt(a, offset), offset) == a
 True
 """
@@ -116,11 +116,12 @@ def non_negative_int(arg):
 def main():
     """
     Main function for caesar encryption/decryption
+    Usage: python project2_task1_c.py path [--offset] [--decrypt] [--inplace]
     """
     parser = argparse.ArgumentParser(
         description='Caesar encryption/decryption')
     parser.add_argument('path', type=str, help='path to file')
-    parser.add_argument('--offset', type=int,
+    parser.add_argument('--offset', type=non_negative_int,
                         default=13, help='Offset')
     parser.add_argument('--decrypt', action='store_true',
                         help='Decrypt instead of encrypt')
@@ -150,7 +151,4 @@ def main():
 
 
 if __name__ == "__main__":
-    import doctest
-
-    doctest.testmod()
     main()
