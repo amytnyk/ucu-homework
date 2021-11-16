@@ -1,5 +1,5 @@
 """
-Module for printing directory contents as tree
+Module for archiving
 """
 import argparse
 import os
@@ -24,12 +24,13 @@ def archive(src: str, dst: str):
     """
     with ZipFile(dst, 'w') as zipfile:
         for file in all_files(src):
-            zipfile.write(file)
+            if os.path.abspath(file) != os.path.abspath(dst):
+                zipfile.write(file, os.path.relpath(file, src))
 
 
 def main():
     """
-    Main function
+    Main function for archiving
     """
     parser = argparse.ArgumentParser(description='Archiver')
     parser.add_argument('src', type=str, help='path to source')
@@ -37,7 +38,10 @@ def main():
     args = parser.parse_args()
 
     try:
-        archive(args.src, args.dst)
+        if os.path.exists(args.src):
+            archive(args.src, args.writedst)
+        else:
+            print("Cannot find any file or directory in specified source path")
     except PermissionError:
         print("Permission denied. Please run with sudo.")
     except IsADirectoryError:

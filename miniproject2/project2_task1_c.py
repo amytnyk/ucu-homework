@@ -1,37 +1,49 @@
 """
 Module for caesar encryption/decryption
+>>> a = "LoReM IpSum Та ШоСЬ таМ!!!!"
+>>> offset = 777
+>>> decrypt(encrypt(a, offset), offset) == a
+True
 """
 import argparse
 
+alphabets = [
+    'абвгґдеєжзиіїйклмнопрстуфхцчшщьюя',
+    'abcdefghijklmnopqrstuvwxyz'
+]
 
-def shift_char(char: str, starting_char: str, offset: int) -> str:
+
+def normalize_idx(idx: int, alphabet_len: int):
+    """
+    Normalizes char index, so that idx will be in [0;alphabet_len)
+    >>> normalize_idx(28, 26)
+    2
+    >>> normalize_idx(-2, 26)
+    24
+    """
+    if idx < 0:
+        idx = alphabet_len + idx % alphabet_len
+    return idx % alphabet_len
+
+
+def shift_char(char: str, offset: int) -> str:
     """
     Shift char by offset
-    >>> shift_char('y', 'a', 3)
+    >>> shift_char('y', 3)
     'b'
-    >>> shift_char('C', 'A', -4)
+    >>> shift_char('C', -4)
     'Y'
+    >>> shift_char('ш', -4)
+    'ф'
     """
-    char_idx = ord(char) + offset - ord(starting_char)
-    if char_idx < 0:
-        char_idx = 26 + char_idx % 26
-    return chr(char_idx % 26 + ord(starting_char))
-
-
-def transform_char(char: str, offset: int) -> str:
-    """
-    Transform char by offset
-    >>> transform_char('Y', 3)
-    'B'
-    >>> transform_char('a', -3)
-    'x'
-    >>> transform_char('&', 16)
-    '&'
-    """
-    if 'a' <= char <= 'z':
-        return shift_char(char, 'a', offset)
-    elif 'A' <= char <= 'Z':
-        return shift_char(char, 'A', offset)
+    for alphabet in alphabets:
+        if char.lower() in alphabet:
+            is_upper = char.isupper()
+            new_char_idx = alphabet.index(char.lower()) + offset
+            shifted_char = alphabet[normalize_idx(new_char_idx, len(alphabet))]
+            if is_upper:
+                shifted_char = shifted_char.upper()
+            return shifted_char
     return char
 
 
@@ -45,7 +57,7 @@ def shift_data(text: str, offset: int) -> str:
     >>> shift_data(shift_data('@#$%^&*(llhji', 17), -17)
     '@#$%^&*(llhji'
     """
-    return ''.join([transform_char(char, offset) for char in text])
+    return ''.join([shift_char(char, offset) for char in text])
 
 
 def encrypt(text: str, offset: int) -> str:
@@ -53,6 +65,8 @@ def encrypt(text: str, offset: int) -> str:
     Encrypt data with offset
     >>> encrypt('abcdefz', 1)
     'bcdefga'
+    >>> encrypt('УКУ', 1)
+    'ФЛФ'
     """
     return shift_data(text, offset)
 
@@ -62,6 +76,8 @@ def decrypt(text: str, offset: int) -> str:
     Decrypt data with offset
     >>> decrypt('bcdefga', 1)
     'abcdefz'
+    >>> decrypt('ЛО', 1)
+    'КН'
     """
     return shift_data(text, -offset)
 
@@ -85,6 +101,8 @@ def write_text_to_file(path: str, text: str):
 def non_negative_int(arg):
     """
     Type function for argparse - a non-negative integer
+    >>> non_negative_int("56")
+    56
     """
     try:
         val = int(arg)
@@ -97,11 +115,12 @@ def non_negative_int(arg):
 
 def main():
     """
-    Main function
+    Main function for caesar encryption/decryption
     """
-    parser = argparse.ArgumentParser(description='Caesar encryption/decryption')
+    parser = argparse.ArgumentParser(
+        description='Caesar encryption/decryption')
     parser.add_argument('path', type=str, help='path to file')
-    parser.add_argument('--offset', type=non_negative_int,
+    parser.add_argument('--offset', type=int,
                         default=13, help='Offset')
     parser.add_argument('--decrypt', action='store_true',
                         help='Decrypt instead of encrypt')
@@ -122,9 +141,16 @@ def main():
             print(text)
     except FileNotFoundError:
         print("File at the specified path was not found")
+    except IsADirectoryError:
+        print("Please specify path to file, not a directory")
+    except PermissionError:
+        print("Insufficient permissions to access file")
+    except UnicodeDecodeError:
+        print("Decoding error, maybe specified file is binary")
 
 
 if __name__ == "__main__":
     import doctest
+
     doctest.testmod()
     main()
